@@ -1,5 +1,12 @@
-<?php
+<html>
+<head>
+    <title> Space Port v0.00 </title>
+</head>
+<body>
 
-echo "Welcome to the space port."
+<?php echo "Welcome to the space port." ?>
+<div
 
+</body>
 
+</html>
