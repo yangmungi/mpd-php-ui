@@ -28,25 +28,25 @@ class ws_wrapper {
     function ws_run($inputs) {
         $this->check_ws();
 
-        $ordered = json_decode($inputs);
-
-        if (!isset($ordered->arguments)) {
-            $ordered->arguments = NULL;
+        if (!isset($inputs['argument'])) {
+            $inputs['argument'] = NULL;
         }
-        
-        $returnj = $this->mpdcon->mpd_send_com($ordered->command, 
-            $ordered->arguments);
 
-        
+        $return = $this->mpdcon->mpd_send_com(
+            $inputs['command'], $inputs['argument']);
+
+        return $return;
     }
 
     function check_ws() {
-        if (!function_exists('json_decode')) {
-            die ('JSON not availble');
-        }
-
         if (!isset($this->mpdcon)) {
             die ('Bad call order, please set WebService first');
+        } else {
+            return TRUE;
+        }
+        
+        if (!function_exists('json_decode')) {
+            die ('JSON not availble');
         }
     }
 }

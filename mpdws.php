@@ -10,11 +10,12 @@ $wsw = new ws_wrapper();
 // Do some pre-settings
 $wsw->ws_set($_POST['salt']);
 
+$sec_func = $wsw->ws_dec;
 if (isset($_POST['config'])) {
-    $wsw->ws_con($wsw->ws_dec($_POST['config']));
+    $wsw->ws_con($sec_func($_POST['config']));
 }
 
-$returns = $wsw->ws_run($wsw->ws_dec($_POST['data']));
+$returns = $wsw->ws_run($sec_func($_POST));
 
 echo $returns;
 

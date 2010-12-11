@@ -15,22 +15,31 @@ class mpd_connection {
         $this->mpd_open();
 
         // Do the stuff
-        $this->mpd_com($command, $options);
-
+        $ret = $this->mpd_com($command, $options);
         $this->mpd_close();
+        
+        return $ret;
     }
 
     function mpd_com($command, $options) {
         $dstr = '';
-
+       
+        // Connect response
         $dstr .= $this->mpd_flush();
 
         $fcmdl = $command;
         if ($options != NULL) {
-            $fcmdl .=' "' . $options . '"';
+            $eopt = explode(' ', $options);
+            $fcmdl .=' "' . implode('" "', $eopt) . '"';
         }
 
-        fputs($this->mpdrs, $fcmdl);
+        $dstr .= "> " . $fcmdl . "\n";
+
+        $stat = fwrite($this->mpdrs, $fcmdl . "\n");
+
+        if (!$stat) {
+            die ("Write error");
+        }
 
         $dstr .= $this->mpd_flush();
 
@@ -40,18 +49,34 @@ class mpd_connection {
     function mpd_flush() {
         $rstring = '';
 
+        $fgetsl = 2048;
+
         while (!feof($this->mpdrs)) {
-            $got = fgets($fp, 1024);
+            $got = fread($this->mpdrs, $fgetsl);
+            //error_log($got);
 
-            if (strncmp("OK", $got, $strlen("OK")) == 0) {
+            $rstring .= $got;
+
+            $cleanput = FALSE;
+            if ($rstring[strlen($rstring) - 1] == "\n") {
+                $cleanput = TRUE;
+            }
+
+            $ers = explode("\n", $got);
+           
+            $brakes = FALSE;
+            foreach ($ers as $line) {
+                if ($cleanput 
+                 && (preg_match('/^OK/', $line)
+                  || preg_match('/^ACK/', $line))) {
+                    $brakes = TRUE;
+                }
+            }
+
+            if ($brakes) {
                 break;
             }
 
-            $rstring .= "$got<br>";
-            
-            if (strncmp("ACK", $got, strlen("ACK")) == 0) {
-                break;
-            }
         }
 
         return $rstring;
@@ -80,17 +105,17 @@ class mpd_connection {
     function check_cfg() {
         if (!isset($this->host)) {
             $this->host = 'localhost';
-            error_log('Missing MPD host setting');
+            //error_log('Missing MPD host setting; setting to ' . $this->host);
         }
 
         if (!isset($this->port)) {
             $this->port = '6600';
-            error_log('Missing MPD port setting');
+            //error_log('Missing MPD port setting; setting to ' . $this->port);
         }
 
         if (!isset($this->timeo)) {
-            $this->timeo = 10;
-            error_log('Missing MPD timeout setting');
+            $this->timeo = 22;
+            //error_log('Missing MPD timeout setting; setting to ' . $this->timeo);
         }
     }
 }
