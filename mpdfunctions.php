@@ -11,29 +11,80 @@ class mpd_connection {
     private $mpdrs;
 
     // Sends a single command to MPD
-    function mpd_send_com($command, $options = NULL) {
+    function mpd_send_com($command, $options = NULL, $no_quote = FALSE) {
         $this->mpd_open();
 
         // Do the stuff
-        $ret = $this->mpd_com($command, $options);
+        $ret = $this->mpd_com($command, $options, $no_quote);
+
         $this->mpd_close();
+
+        $fullret = $this->mpd_parse($ret);
+
+        if (is_array($fullret)) {
+            $fullret = json_encode($fullret);
+        }
         
-        return $ret;
+        return $fullret;
     }
 
-    function mpd_com($command, $options) {
+    function mpd_parse($retstr) {
+        $inputs = explode("\n", $retstr);
+
+        $facts = array();
+
+        foreach ($inputs as $input) {
+            if (!preg_match("/^OK/", $input) && trim($input) != '') {
+                if (preg_match("/^ACK.*/", $input)) {
+                    return FALSE; 
+                }
+
+                preg_match('/([a-zA-Z0-9]*):\s*(.*)/', $input, $matches);
+               
+                $field = strtolower(trim($matches[1]));
+
+                if (isset($matches[2])) {
+                    $datum = trim($matches[2]);
+                }
+
+                if (!isset($theobj)) {
+                    $theobj = array();
+                } else if (isset($theobj[$field])) {
+                    $facts[] = $theobj;
+                    $theobj = array();
+                }
+
+                if (isset($datum)) {
+                    $theobj[$field] = $datum;
+                }
+            }
+        }
+
+        if (isset($theobj)) {
+            $facts[] = $theobj;
+        }
+
+        return $facts;
+    }
+
+    function mpd_com($command, $options, $no_quote = FALSE) {
         $dstr = '';
        
         // Connect response
         $dstr .= $this->mpd_flush();
 
         $fcmdl = $command;
+
         if ($options != NULL) {
-            $eopt = explode(' ', $options);
-            $fcmdl .=' "' . implode('" "', $eopt) . '"';
+            if ($no_quote) {
+                $fcmdl .= ' "' . $options . '"';
+            } else {
+                $eopt = explode(' ', $options);
+                $fcmdl .= ' "' . implode('" "', $eopt) . '"';
+            }
         }
 
-        $dstr .= "> " . $fcmdl . "\n";
+        //$dstr .= "> " . $fcmdl . "\n";
 
         $stat = fwrite($this->mpdrs, $fcmdl . "\n");
 
@@ -49,10 +100,11 @@ class mpd_connection {
     function mpd_flush() {
         $rstring = '';
 
-        $fgetsl = 2048;
+        $fgetsl = 8192;
 
         while (!feof($this->mpdrs)) {
-            $got = fread($this->mpdrs, $fgetsl);
+            $got = fgets($this->mpdrs, $fgetsl);
+
             //error_log($got);
 
             $rstring .= $got;
@@ -105,17 +157,14 @@ class mpd_connection {
     function check_cfg() {
         if (!isset($this->host)) {
             $this->host = 'localhost';
-            //error_log('Missing MPD host setting; setting to ' . $this->host);
         }
 
         if (!isset($this->port)) {
             $this->port = '6600';
-            //error_log('Missing MPD port setting; setting to ' . $this->port);
         }
 
         if (!isset($this->timeo)) {
             $this->timeo = 22;
-            //error_log('Missing MPD timeout setting; setting to ' . $this->timeo);
         }
     }
 }

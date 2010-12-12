@@ -28,13 +28,17 @@ body {
 
 #play-controls {
     position: fixed;
-    left: 55%;
+    padding: 4px;
+    left: 50%;
+    width: 49%;
+    height: auto;
+    background-color: #FFFFFF;
 }
 
 .play-icons {
     width: 24px;
     height: 24px;
-    padding: 4px;
+    padding: 2px;
     margin: 2px;
     float: left;
 }
@@ -44,14 +48,15 @@ body {
 }
 
 #voluprogwrap {
-    width: 300px;
     float: left;
-    margin: 12px 0px 0px 12px;
+    width: 68%;
+    margin: 8px 0px 0px 12px;
 }
 
 #playprogwrap {
-    width: 80%;
+    width: 96%;
     float: left;
+    clear: left;
     margin: 12px 0px 0px 12px;
 }
 
@@ -60,7 +65,6 @@ body {
 }
 
 #songlist {
-    clear: both;
     width: 50%;
 }
 
@@ -68,17 +72,10 @@ h3.ui-accordion-header {
     font-size: 10pt;
 }
 
-.float-left {
-    float: left;
-    clear: both;
-    width: 100%;
-}
-
 .song-item {
     float: left;
     width: 85%;
     padding: 4px;
-    height: 24px;
     margin: 2px;
 }
 
@@ -91,16 +88,39 @@ ul {
 }
 
 #searchres {
-    clear: left;
+    left: 50%;
+    width: 50%;
+    position: absolute;
+}
+
+.search-reit {
+    padding: 4px;
+    margin: 2px 2px;
+    width: 95%;
+    float: left;
+}
+
+.search-icons {
+    float: left;
+    padding: 4px;
+    margin: 2px 2px;
+}
+
+.search-item {
+
 }
 
 #searchfield {
+    clear: left;
     float: left;
 }
 
-#searchbutton {
-    float: left;
-    margin: 4px;
+.ui-selected {
+    background: #FFFF38;
+}
+
+.no-display {
+    display: none;
 }
 
 </style>
@@ -120,10 +140,7 @@ var currState;
 
 /** Initial Assigns and Event Listeners **/
 $(document).ready( function() {
-    $('#runcomm').click( function() {
-        var comm = $('#commander').val();
-    });
-
+    /** Start play controls **/
     assignHover('.play-icons');
 
 <?php
@@ -132,43 +149,149 @@ $(document).ready( function() {
     }
 ?>
 
+    /** Quick update **/
     updateState();
 
-    //setInterval('sendMPD(\'status\');', 1000);
-
-    $('#searchres').selectable();
-
+    /** Search features **/
     $('#searchbutton').click( function() {
         var searching = $('#searchfield').val();
-
-        sendMPD('search', 'artist ' + searching, updateDebug);
+        sendMPD('search', 'artist ' + searching, searchResponse, 
+            true, false);
     });
+
+    $('#addallsongs').click( function () {
+        playListAddSongs('.songinfo');
+    });
+
+    $('#addsinglesong').click( function () {
+        playListAddSongs('.ui-selected + .songinfo');
+    });
+
+    $('#deselsearch').click( function () {
+        $('.ui-selected').removeClass('ui-selected');
+        updateAddButtons();
+    });
+
+    assignHover('.search-icons');
+
+    /** Entire Play Controls **/
+    $('#play-controls').draggable();
+    
+    /** AGAIN **/
+    updateAddButtons();
+    updateState();
 });
 
+function playListAddSongs(jQCore) {
+    $(jQCore).each( function (n, e) {
+        sendMPD('addid', $(this).text(), function() { },
+            false, true);
+    });
+
+    playListUpdate = true;
+    updateState();
+}
+
+function searchResponse(args) {
+    if (args !== '[]') {
+        $('#searchres').fadeOut(1000, function () {
+            $(this).empty();
+
+            if (args == '') {
+                return;
+            }
+
+            var sres = JSON.parse(args);
+            var sSong;
+
+            for (var i in sres) {
+                sSong = sres[i];
+
+                addSearchResult(sSong, i);
+            }
+
+            $('#searchres').selectable({
+                filter: '.search-reit',
+                stop: updateAddButtons
+            });
+
+            $(this).fadeIn();
+        });
+    }
+}
+
+function updateAddButtons() {
+    var jQR = $('.search-reit.ui-selected');
+
+    var singleBtn = '#addsinglesong, #deselsearch';
+    if (jQR.length == 0) {
+        if ($(singleBtn).css('display') != 'none') {
+            $(singleBtn).fadeOut();
+        }
+    } else {
+        if ($(singleBtn).css('display') == 'none') {
+            $(singleBtn).fadeIn();
+        }
+    }
+}
+
+function addSearchResult(song, searchId) {
+    var songDisp;
+
+    if (song.artist == undefined || song.title == undefined) {
+        songDisp = song.file;
+    } else {
+        songDisp = song.artist + ' - ' + song.title;
+    }
+
+    $('#searchres').append(
+              '<div class="search-item">'
+            + '<div class="ui-state-default ui-corner-all search-reit">' 
+            + songDisp + '</div>'
+//            + '<div id="' + searchId + '_searchres" '
+//            + 'class="ui-state-default ui-corner-all search-icons">'
+//            + '<span class="ui-icon ui-icon-circle-plus">'
+//            + '</span>' 
+//            + '</div>'
+            + '<div class="no-display songinfo">'
+            + song.file
+            + '</div>'
+            + '</div>'
+    );
+}
+
 function assignHover(jqCore) {
-    $(jqCore).hover(
+    $(jqCore).unbind('hover').hover(
         function() { $(this).addClass('ui-state-hover'); },
         function() { $(this).removeClass('ui-state-hover'); }
     );
-    
+}
+
+function currentTargetExtract(cti, alt) {
+    var playArg = cti;
+
+    if (cti == undefined) {
+        updateDebug("undefined");
+    } else {
+        var tArg = playArg.match(/([0123456789]+)/);
+
+        if (!tArg) {
+            playArg = alt;
+        } else {
+            if (tArg[1] != undefined) {
+                playArg = parseInt(tArg[1]);
+            }
+        }
+    };
+
+    return playArg;
 }
 
 /** MPD Buttons **/
 function cmd_play(arg) {
-    var playArg = '';
+    var playArg = currentTargetExtract(arg.currentTarget.id, playListCurr);
 
-    if (arg.toElement.id == undefined) {
-        updateDebug("undefined");
-    } else {
-        var tArg = arg.currentTarget.id.match(/([0-9]*)/);
-        if (tArg[1] != undefined && parseInt(tArg[1])) {
-            playArg = parseInt(tArg[1]) - 1;
-        }
-    };
-
-    //updateDebug(playArg);
-
-    sendMPD('play', playArg);
+    sendMPD('playid', playArg);
 }
 
 function cmd_stop() {
@@ -195,13 +318,31 @@ function cmd_resume() {
     sendMPD('pause', '0');
 }
 
-function cmd_remove() {
+function cmd_remove(arg) {
+    var playArg = currentTargetExtract(arg.currentTarget.id, playListCurr);
 
+    playListUpdate = true;
+    sendMPD('deleteid', playArg);
+}
+
+function cmd_addSong(arg) {
+    var ctid = arg.currentTarget.id;
+    if (ctid == '' || ctid == 'undefined') {
+        updateDebug('null');
+        return;
+    }
+
+    var playArg = $('#' + ctid + ' .songinfo').text();
+
+    return;
+
+    playListUpdate = true;
+    sendMPD('addid', playArg);
 }
 
 /** Misc Functions **/
 function updateDebug(data) {
-    $('#debuggah').append(data);
+    $('#debuggah').append(data + "\n");
 }
 
 /** Status Functions **/
@@ -210,39 +351,9 @@ function updateState() {
 }
 
 function parseMPDResults(inputs) {
-    var aSplits = inputs.split("\n");
-    var statSplitter = /([a-zA-Z]*: )(.*)/;
-    var statSpliClean = /[a-zA-Z]*/;
+    var jsonObj = JSON.parse(inputs);
 
-    var currTag;
-    var currMatch;
-
-    var currArgs;
-    var currResults = [];
-
-    // Get all status information
-    var grouper = 0;
-    for (var i in aSplits) {
-        currMatch = aSplits[i].match(statSplitter);
-
-        if (currMatch == null) {
-            continue;
-        }
-
-        // Clean the command parse
-        currArgs = currMatch[2];
-        currTag = currMatch[1].match(statSpliClean);
-        currTag = currTag + grouper;
-        currTag = currTag.toLowerCase();
-
-        while (currResults[currTag] != undefined) {
-            grouper++;
-        }
-
-        currResults[currTag] = currArgs;
-    }
-
-    return currResults;
+    return jsonObj;
 }
 
 function updateStatuses(arg) {
@@ -253,13 +364,15 @@ function updateStatuses(arg) {
     var currArgs = '';
 
     for (var i in returners) {
-        currMatch = 'updateState_' + i.substring(0, i.length - 1);
-        currArgs = returners[i];
+        for (var j in returners[i]) {
+            currMatch = 'updateState_' + j;
+            currArgs = returners[i][j];
 
-        if (window[currMatch] != undefined) {
-            eval(currMatch + '(currArgs)');
-        } else {
-            //updateDebug(currMatch + " does not exist.\n");
+            if (window[currMatch] != undefined) {
+                eval(currMatch + '(currArgs)');
+            } else {
+                //updateDebug(currMatch + " does not exist.\n");
+            }
         }
     }
 }
@@ -271,16 +384,17 @@ function playlistName(id) {
 function updatePlaylist(arg) {
     var songInfo = parseMPDResults(arg);
 
-    var playListId = playlistName(songInfo['id0']);
+    var playListId = playlistName(parseInt(songInfo[0]['id']));
     $('#songlist').append(
               '<div id="'+ playListId + '" '
             + 'class="float-left">' 
             + '<div class="ui-state-default ui-corner-all song-item">'
-            + songInfo['artist0'] + ' - ' + songInfo['title0'] 
+            + songInfo[0]['artist'] + ' - ' + songInfo[0]['title'] 
             + '</div>'
             + '<div>'
 <?php
-$jsid = '\' + songInfo[\'id0\'] + \'_';
+
+$jsid = '\' + playListId + \'_';
 
 foreach ($conbut as $id => $btn) {
     echo '+ \'' . build_div_button($jsid . $id, $btn) . '\'' . "\n";
@@ -291,11 +405,13 @@ foreach ($conbut as $id => $btn) {
     );
 
 <?php
+
 foreach ($conbut as $id => $btn) {
     $nid = $jsid . $id;
     echo "$('#$nid').unbind('click').click( cmd_$id );\n";
     echo "assignHover('#$nid');\n";
 }
+
 ?>
 
 }
@@ -314,7 +430,7 @@ function updateState_volume(args) {
     $('#voluprog').slider({
         range: 'min',
         min: -1,
-        max: 101,
+        max: 100,
         value: args,
         slide: function(event, ui) {
             sendMPD('setvol', ui.value - 1, false);
@@ -335,7 +451,6 @@ function updateState_playlist(args) {
 }
 
 function updateState_playlistlength(args) {
-    //updateDebug('Playlist Length: ' + args + "\n");
     playListSize = args;
     
     if (playListSize != undefined 
@@ -346,11 +461,6 @@ function updateState_playlistlength(args) {
             sendMPD('playlistinfo', i, updatePlaylist, false);
         }
 
-        var icons = {
-            header: "ui-icon-circle-plus",
-            headerSelected: "ui-icon-circle-minus"
-        };
-
         playListUpdate = false;
     }
 }
@@ -359,7 +469,6 @@ function updateState_state(arg) {
     updateIcon(arg, 'play');
 
     currState = arg;
-    //updateDebug('State: ' + arg + "\n");
 }
 
 function updateIcon(state, ident) {
@@ -388,9 +497,8 @@ function updateIcon(state, ident) {
     $('#' + ident).click(bindFunc);
 }
 
-function updateState_song(arg) {
-    arg = parseInt(arg) + 1;
-    //arg = parseInt(arg);
+function updateState_songid(arg) {
+    arg = parseInt(arg);
 
     if (playListCurr != undefined) {
         $('#' + playlistName(playListCurr) + ' .song-item')
@@ -405,10 +513,6 @@ function updateState_song(arg) {
 
 function updateState_time(arg) {
     var playtime = arg.split(':');
-    var progress = parseInt(100 * playtime[0] / playtime[1]);
-
-    //updateDebug(progress);
-
     var minDisp = toMinutes(playtime);
 
     $('#playprog').slider({
@@ -445,7 +549,7 @@ function toMinutes(splits) {
 }
 
 /** Background Helper Services **/
-function sendMPD(cmd, args, customcallback, asyncOpt) {
+function sendMPD(cmd, args, customcallback, asyncOpt, forceQuote) {
     if (cmd == undefined) {
         updateDebug("No command was given.");
     }
@@ -462,13 +566,18 @@ function sendMPD(cmd, args, customcallback, asyncOpt) {
         asyncOpt = true;
     }
 
+    if (forceQuote == undefined) {
+        forceQuote = false;
+    }
+
     $.ajax({
         url: 'mpdws.php',
         type: 'POST',
         data: {
             salt: 'gen',
             command: cmd,
-            argument: args
+            argument: args,
+            force: forceQuote
         },
         success: customcallback,
         async: asyncOpt
@@ -476,7 +585,10 @@ function sendMPD(cmd, args, customcallback, asyncOpt) {
 }
 </script>
 
-<div id="play-controls">
+<div id="searchres"></div>
+<div id="songlist"></div>
+
+<div id="play-controls" class="ui-widget ui-corner-all">
 <?php
 
 foreach ($but as $id => $btn) {
@@ -486,7 +598,7 @@ foreach ($but as $id => $btn) {
 function build_div_button($id, $btn) {
     return '<div id="' . $id . '" ' 
        . 'class="ui-state-default ui-corner-all play-icons" '
-       . 'title=".ui-icon-' . $btn . '">' 
+       . 'title="' . ucwords($id) . '">' 
        . '<span class="ui-icon ui-icon-' . $btn . '"></span>'
        . '</div>';
 }
@@ -498,21 +610,24 @@ function build_div_button($id, $btn) {
 
     <div id="playprogwrap">
         <div id="playprog"></div>
-        <div id="playprogtext">00:00</div>
+        <div id="playprogtext">Calculating</div>
     </div>
 
     <div id="searchwrap">
-    <input id="searchfield" type="text" size="35" />
-    <div id="searchbutton" class="ui-state-default ui-corner-all" title="ui-icon-search">
-        <span class="ui-icon ui-icon-search"></span>
+        <input id="searchfield" type="text" size="35" />
+        <div id="searchbutton" class="ui-state-default ui-corner-all search-icons" title="Search">
+            <span class="ui-icon ui-icon-search"></span>
+        </div>
+        <div id="addallsongs" class="ui-state-default ui-corner-all search-icons" title="Add All Songs">
+            <span class="ui-icon ui-icon-circle-plus"></span>
+        </div>
+        <div id="addsinglesong" class="ui-state-default ui-corner-all search-icons" title="Add Selected Song">
+            <span class="ui-icon ui-icon-plus"></span>
+        </div>
+        <div id="deselsearch" class="ui-state-default ui-corner-all search-icons" title="Deselect Songs">
+            <span class="ui-icon ui-icon-close"></span>
+        </div>
     </div>
-    <ul id="searchres">
-    </ul>
-    </div>
-</div>
-
-<div id="songlistwrap">
-    <div id="songlist"></div>
 </div>
 
 <pre id="debuggah"></pre>

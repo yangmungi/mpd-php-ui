@@ -31,9 +31,19 @@ class ws_wrapper {
         if (!isset($inputs['argument'])) {
             $inputs['argument'] = NULL;
         }
+       
+        if (isset($inputs['force'])) {
+            if ($inputs['force'] == 'false') {
+                $input_force = FALSE;
+            } else {
+                $input_force = TRUE;
+            }
+        }
 
         $return = $this->mpdcon->mpd_send_com(
-            $inputs['command'], $inputs['argument']);
+            $inputs['command'], 
+            $inputs['argument'], 
+            $input_force);
 
         return $return;
     }
