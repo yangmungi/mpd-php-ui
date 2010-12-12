@@ -1,90 +1,69 @@
 <html>
 <head>
     <title> Space Port v0.00 </title>
-
-    <link type="text/css" href="css/dark-hive/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
+    <link type="text/css" href="css/custom-theme/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
 </head>
 <body>
 
-<?php
-
-$but = array();
-$but['prev'] = 'seek-first';
-$but['stop'] = 'stop';
-$but['play'] = 'play';
-$but['next'] = 'seek-end';
-$but['refresh'] = 'arrowrefresh-1-w';
-
-$conbtn = array();
-$conbut['play'] = $but['play'];
-$conbut['remove'] = 'circle-close';
-
-?>
-
 <style type="text/css">
+
+/** Global **/
 body {
     min-width: 1024px;
 }
 
+/** Play Controls **/
 #play-controls {
     position: fixed;
     padding: 4px;
-    left: 50%;
-    width: 49%;
+    width: 98%;
     height: auto;
     background-color: #FFFFFF;
 }
 
+.mod-title {
+    text-align: center;
+    margin: 2px;
+    padding: 0px 8px;
+    float: left;
+}
+
 .play-icons {
-    width: 24px;
-    height: 24px;
-    padding: 2px;
+    padding: 4px;
     margin: 2px;
     float: left;
 }
 
-.play-icons span.ui-icon {
-    margin: 4px 4px;
-}
-
 #voluprogwrap {
     float: left;
-    width: 68%;
-    margin: 8px 0px 0px 12px;
+    margin: 8px;
+    width: 40px;
 }
 
 #playprogwrap {
-    width: 96%;
+    width: 400px;
     float: left;
-    clear: left;
-    margin: 12px 0px 0px 12px;
+    margin: 8px;
 }
 
 #playprogtext {
     margin: 4px;
+    float: left;
 }
 
 #songlist {
     width: 50%;
 }
 
-h3.ui-accordion-header {
-    font-size: 10pt;
-}
-
 .song-item {
     float: left;
     width: 85%;
-    padding: 4px;
+    padding: 2px;
     margin: 2px;
 }
 
 #searchwrap {
     width: 100%;
-}
-
-ul {
-    position: relative;
 }
 
 #searchres {
@@ -111,24 +90,15 @@ ul {
 }
 
 #searchfield {
-    clear: left;
     float: left;
 }
 
 .ui-selected {
-    background: #FFFF38;
+    background: #DB4865 url(http://localhost/mpd/css/custom-theme/images/ui-bg_glass_40_db4865_1x400.png) repeat-x 50% 50%;
 }
 
 .no-display {
     display: none;
-}
-
-.mod-title {
-    text-align: center;
-    padding: 8px;
-    margin: auto;
-    width: 90%;
-
 }
 
 </style>
@@ -136,9 +106,34 @@ ul {
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="jquery.ui.js"></script>
 <script type="text/javascript">
+<?php
+
+$playbtn = array();
+$playbtn['prev']['title'] = 'Previous Song';
+$playbtn['prev']['icon']  = 'seek-first';
+
+$playbtn['stop']['title'] = 'Stop';
+$playbtn['stop']['icon']  = 'stop';
+
+$playbtn['play']['title'] = 'Play Current Song';
+$playbtn['play']['icon']  = 'play';
+
+$playbtn['next']['title'] = 'Next Song';
+$playbtn['next']['icon']  = 'seek-end';
+
+$playbtn['refresh']['title'] = 'Quick Refresh';
+$playbtn['refresh']['icon']  = 'arrowrefresh-1-w';
+
+$conbtn = array();
+$conbtn['play']['icon']  = 'play'; 
+$conbtn['play']['title'] = 'Play This Song';
+
+$conbtn['remove']['icon']  = 'circle-close';
+$conbtn['remove']['title'] = 'Remove From Playlist';
+
+?>
 
 /** State Variables **/
-var playListSize;
 var playListUpdate;
 var playListCurr;
 
@@ -148,19 +143,15 @@ var currState;
 
 /** Initial Assigns and Event Listeners **/
 $(document).ready( function() {
-    /** Start play controls **/
-    assignHover('.play-icons');
-
+    /** Play Controls **/
 <?php
-    foreach ($but as $id => $btn) {
-        echo "$('#" . $id . "').click( cmd_$id );";
+    foreach ($playbtn as $id => $btn) {
+        echo "\t$('#" . $id . "').click( cmd_$id );";
     }
 ?>
+    assignHover('.play-icons');
 
-    /** Quick update **/
-    updateState();
-
-    /** Search features **/
+    /** Search Controls **/
     $('#searchbutton').click( function() {
         var searching = $('#searchfield').val();
         sendMPD('search', 'artist ' + searching, searchResponse, 
@@ -185,9 +176,10 @@ $(document).ready( function() {
     /** Entire Play Controls **/
     $('#play-controls').draggable();
     
-    /** AGAIN **/
+    /** Initial Update **/
     updateAddButtons();
     updateState();
+    searchResponse('[]');
 });
 
 function playListAddSongs(jQCore) {
@@ -201,31 +193,33 @@ function playListAddSongs(jQCore) {
 }
 
 function searchResponse(args) {
-    if (args !== '[]') {
-        $('#searchres').fadeOut(1000, function () {
-            $(this).empty();
+    var fadeTime = 300;
+    $('#addallsongs').fadeOut();
+    $('#searchres').fadeOut(fadeTime, function () {
+        $(this).empty();
 
-            if (args == '') {
-                return;
-            }
+        if (args == '[]') {
+            return;
+        }
 
-            var sres = JSON.parse(args);
-            var sSong;
+        var sres = JSON.parse(args);
+        var sSong;
 
-            for (var i in sres) {
-                sSong = sres[i];
+        for (var i in sres) {
+            sSong = sres[i];
 
-                addSearchResult(sSong, i);
-            }
+            addSearchResult(sSong, i);
+        }
 
-            $('#searchres').selectable({
-                filter: '.search-reit',
-                stop: updateAddButtons
-            });
-
-            $(this).fadeIn();
+        $('#searchres').selectable({
+            filter: '.search-reit',
+            stop: updateAddButtons
         });
-    }
+
+        $(this).fadeIn(fadeTime, function() {
+            $('#addallsongs').fadeIn();
+        });
+    });
 }
 
 function updateAddButtons() {
@@ -256,11 +250,6 @@ function addSearchResult(song, searchId) {
               '<div class="search-item">'
             + '<div class="ui-state-default ui-corner-all search-reit">' 
             + songDisp + '</div>'
-//            + '<div id="' + searchId + '_searchres" '
-//            + 'class="ui-state-default ui-corner-all search-icons">'
-//            + '<span class="ui-icon ui-icon-circle-plus">'
-//            + '</span>' 
-//            + '</div>'
             + '<div class="no-display songinfo">'
             + song.file
             + '</div>'
@@ -392,36 +381,39 @@ function playlistName(id) {
 function updatePlaylist(arg) {
     var songInfo = parseMPDResults(arg);
 
-    var playListId = playlistName(parseInt(songInfo[0]['id']));
-    $('#songlist').append(
+    for (var i in songInfo) {
+        var playListId = playlistName(parseInt(songInfo[i]['id']));
+        $('#songlist').append(
               '<div id="'+ playListId + '" '
             + 'class="float-left">' 
             + '<div class="ui-state-default ui-corner-all song-item">'
-            + songInfo[0]['artist'] + ' - ' + songInfo[0]['title'] 
+            + songInfo[i]['artist'] + ' - ' + songInfo[i]['title'] 
             + '</div>'
             + '<div>'
 <?php
 
 $jsid = '\' + playListId + \'_';
 
-foreach ($conbut as $id => $btn) {
-    echo '+ \'' . build_div_button($jsid . $id, $btn) . '\'' . "\n";
+foreach ($conbtn as $id => $btn) {
+    echo "\t\t\t" . '+ \'' 
+        . build_div_button($jsid . $id, $btn['icon'], 
+            'play-icons', $btn['title']) 
+        . '\'' . "\n";
 }
 
 ?>
             + '</div>'
-    );
-
+        );
 <?php
 
-foreach ($conbut as $id => $btn) {
+foreach ($conbtn as $id => $btn) {
     $nid = $jsid . $id;
-    echo "$('#$nid').unbind('click').click( cmd_$id );\n";
-    echo "assignHover('#$nid');\n";
+    echo "\t\t$('#$nid').unbind('click').click( cmd_$id );\n";
+    echo "\t\tassignHover('#$nid');\n";
 }
 
 ?>
-
+    }
 }
 
 /** State Update Functions **/
@@ -436,6 +428,7 @@ function updateState_volume(args) {
     volPrev = args;
 
     $('#voluprog').slider({
+        orientation: 'horizontal',
         range: 'min',
         min: -1,
         max: 100,
@@ -459,15 +452,14 @@ function updateState_playlist(args) {
 }
 
 function updateState_playlistlength(args) {
-    playListSize = args;
-    
+    var playListSize = args;
+   
     if (playListSize != undefined 
       && (playListUpdate == undefined
        || playListUpdate == true)) {
         $('#songlist').empty();
-        for (var i = 0; i < playListSize; i++) {
-            sendMPD('playlistinfo', i, updatePlaylist, false);
-        }
+        sendMPD('playlistinfo', '0:' + playListSize, updatePlaylist, 
+                false);
 
         playListUpdate = false;
     }
@@ -596,23 +588,18 @@ function sendMPD(cmd, args, customcallback, asyncOpt, forceQuote) {
 <div id="searchres"></div>
 <div id="songlist"></div>
 
-<div id="play-controls" class="ui-widget ui-corner-all">
+<div id="play-controls" class="ui-widget ui-widget-content ui-corner-all">
+<!--
+    <div class="ui-widget-header ui-corner-all mod-title">
+        Player Controls
+    </div>
+-->
 
-<div class="ui-widget-header ui-corner-all mod-title">
-    Player Controls
-</div>
 <?php
 
-foreach ($but as $id => $btn) {
-    echo build_div_button($id, $btn);
-}
-
-function build_div_button($id, $btn) {
-    return '<div id="' . $id . '" ' 
-       . 'class="ui-state-default ui-corner-all play-icons" '
-       . 'title="' . ucwords($btn) . '">' 
-       . '<span class="ui-icon ui-icon-' . $btn . '"></span>'
-       . '</div>';
+foreach ($playbtn as $id => $btn) {
+    echo "\n" . build_div_button($id, $btn['icon'], 
+            'play-icons', $btn['title']) . "\n";
 }
 
 ?>
@@ -622,28 +609,51 @@ function build_div_button($id, $btn) {
 
     <div id="playprogwrap">
         <div id="playprog"></div>
-        <div id="playprogtext">Calculating</div>
     </div>
+    <div id="playprogtext">0:00 / 0:00</div>
 
     <div id="searchwrap">
-        <input id="searchfield" type="text" size="35" />
-        <div id="searchbutton" class="ui-state-default ui-corner-all search-icons" title="Search">
-            <span class="ui-icon ui-icon-search"></span>
-        </div>
-        <div id="addallsongs" class="ui-state-default ui-corner-all search-icons" title="Add All Songs">
-            <span class="ui-icon ui-icon-circle-plus"></span>
-        </div>
-        <div id="addsinglesong" class="ui-state-default ui-corner-all search-icons" title="Add Selected Song">
-            <span class="ui-icon ui-icon-plus"></span>
-        </div>
-        <div id="deselsearch" class="ui-state-default ui-corner-all search-icons" title="Deselect Songs">
-            <span class="ui-icon ui-icon-close"></span>
-        </div>
-    </div>
+        <input id="searchfield" type="text" size="25" />
+<?php
+
+$searchbtn = array();
+
+$searchbtn['searchbutton']['title'] = 'Search';
+$searchbtn['searchbutton']['icon']  = 'search';
+
+$searchbtn['addallsongs']['title'] = 'Add All Songs';
+$searchbtn['addallsongs']['icon']  = 'circle-plus';
+
+$searchbtn['addsinglesong']['title'] = 'Add Selected Song(s)';
+$searchbtn['addsinglesong']['icon']  = 'plus';
+
+$searchbtn['deselsearch']['title'] = 'Deselect Songs';
+$searchbtn['deselsearch']['icon']  = 'close';
+
+foreach ($searchbtn as $id => $btn) {
+    echo build_div_button($id, $btn['icon'], 'search-icons', $btn['title'])
+        . "\n";
+}
+
+?>
+
 </div>
 
 <pre id="debuggah"></pre>
 
 </body>
+
+<?php
+
+function build_div_button($id, $icon, $class_str, $title) {
+    return '<div id="' . $id . '" ' 
+       . 'class="ui-state-default ui-corner-all '
+       . $class_str . '" ' 
+       . 'title="' . $title . '">' 
+       . '<span class="ui-icon ui-icon-' . $icon . '"></span>'
+       . '</div>';
+}
+
+?>
 
 </html>
