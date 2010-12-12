@@ -2,7 +2,7 @@
 <head>
     <title> Space Port v0.00 </title>
 
-    <link type="text/css" href="css/hot-sneaks/jquery-ui-1.8.6.custom.css" rel="stylesheet" />
+    <link type="text/css" href="css/dark-hive/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
 </head>
 <body>
 
@@ -121,6 +121,14 @@ ul {
 
 .no-display {
     display: none;
+}
+
+.mod-title {
+    text-align: center;
+    padding: 8px;
+    margin: auto;
+    width: 90%;
+
 }
 
 </style>
@@ -520,7 +528,7 @@ function updateState_time(arg) {
         max: parseInt(playtime[1]),
         value: parseInt(playtime[0]),
         stop: function(event, ui) {
-            sendMPD('seek', (parseInt(playListCurr) - 1) 
+            sendMPD('seekid', parseInt(playListCurr) 
                 + ' ' + ui.value);
         },
         change: function(event, ui) {
@@ -589,6 +597,10 @@ function sendMPD(cmd, args, customcallback, asyncOpt, forceQuote) {
 <div id="songlist"></div>
 
 <div id="play-controls" class="ui-widget ui-corner-all">
+
+<div class="ui-widget-header ui-corner-all mod-title">
+    Player Controls
+</div>
 <?php
 
 foreach ($but as $id => $btn) {
@@ -598,7 +610,7 @@ foreach ($but as $id => $btn) {
 function build_div_button($id, $btn) {
     return '<div id="' . $id . '" ' 
        . 'class="ui-state-default ui-corner-all play-icons" '
-       . 'title="' . ucwords($id) . '">' 
+       . 'title="' . ucwords($btn) . '">' 
        . '<span class="ui-icon ui-icon-' . $btn . '"></span>'
        . '</div>';
 }

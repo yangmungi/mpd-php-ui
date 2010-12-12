@@ -33,6 +33,8 @@ class mpd_connection {
 
         $facts = array();
 
+        //error_log(print_r($inputs, TRUE));
+
         foreach ($inputs as $input) {
             if (!preg_match("/^OK/", $input) && trim($input) != '') {
                 if (preg_match("/^ACK.*/", $input)) {
@@ -49,7 +51,8 @@ class mpd_connection {
 
                 if (!isset($theobj)) {
                     $theobj = array();
-                } else if (isset($theobj[$field])) {
+                } else if (isset($theobj[$field]) 
+                        && $field != 'composer') {
                     $facts[] = $theobj;
                     $theobj = array();
                 }

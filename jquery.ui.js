@@ -1,1 +1,1 @@
-js/jquery-ui-1.8.6.custom.min.js
+js/jquery-ui-1.8.7.custom.min.js
