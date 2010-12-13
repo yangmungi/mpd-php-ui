@@ -14,7 +14,7 @@ body {
 
 /** Play Controls **/
 #play-controls {
-    position: absolute;
+    position: fixed;
     padding: 4px;
     width: 98%;
     height: auto;
@@ -266,7 +266,9 @@ function addSearchResult(song, searchId) {
     if (song.artist == undefined || song.title == undefined) {
         songDisp = song.file;
     } else {
-        songDisp = song.artist + ' - ' + song.title;
+        songDisp = 
+              song.artist + ' - ' + song.album 
+            + ' (' + song.track + '): ' + song.title;
     }
 
     $('#searchres').append(
@@ -400,11 +402,14 @@ function updatePlaylist(arg) {
 
     for (var i in songInfo) {
         var playListId = playlistName(parseInt(songInfo[i]['id']));
+        var songInfoString = 
+              songInfo[i]['artist'] + ' - '
+            + songInfo[i]['title'];
         $('#songlist').append(
               '<div id="'+ playListId + '" '
             + 'class="float-left">' 
             + '<div class="ui-state-default ui-corner-all song-item">'
-            + songInfo[i]['artist'] + ' - ' + songInfo[i]['title'] 
+            + songInfoString 
             + '</div>'
             + '<div>'
 <?php
