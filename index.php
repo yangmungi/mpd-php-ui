@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title> Space Port v0.00 </title>
+    <title> Space Port v1.00 </title>
     <link type="text/css" href="css/custom-theme/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
 </head>
 <body>
@@ -14,7 +14,7 @@ body {
 
 /** Play Controls **/
 #play-controls {
-    position: fixed;
+    position: absolute;
     padding: 4px;
     width: 98%;
     height: auto;
@@ -43,7 +43,7 @@ body {
 #playprogwrap {
     width: 400px;
     float: left;
-    margin: 8px;
+    margin: 8px 14px;
 }
 
 #playprogtext {
@@ -52,7 +52,20 @@ body {
 }
 
 #songlist {
+    top: 50px;
     width: 50%;
+    left: 12px;
+    position: absolute;
+}
+
+#playlistcowrap {
+    clear: both;
+}
+
+.playlistco {
+    float: right;
+    padding: 4px;
+    margin: 2px 24px 2px 0px;
 }
 
 .song-item {
@@ -67,13 +80,14 @@ body {
 }
 
 #searchres {
-    left: 50%;
+    top: 50px;
+    right: 0px;
     width: 50%;
     position: absolute;
 }
 
 .search-reit {
-    padding: 4px;
+    padding: 2px;
     margin: 2px 2px;
     width: 95%;
     float: left;
@@ -103,9 +117,6 @@ body {
 
 </style>
 
-<script type="text/javascript" src="jquery.js"></script>
-<script type="text/javascript" src="jquery.ui.js"></script>
-<script type="text/javascript">
 <?php
 
 $playbtn = array();
@@ -121,8 +132,11 @@ $playbtn['play']['icon']  = 'play';
 $playbtn['next']['title'] = 'Next Song';
 $playbtn['next']['icon']  = 'seek-end';
 
-$playbtn['refresh']['title'] = 'Quick Refresh';
-$playbtn['refresh']['icon']  = 'arrowrefresh-1-w';
+$playbtn['psclear']['title'] = 'Clear Playlist';
+$playbtn['psclear']['icon']  = 'trash';
+
+//$playbtn['refresh']['title'] = 'Quick Refresh';
+//$playbtn['refresh']['icon']  = 'arrowrefresh-1-w';
 
 $conbtn = array();
 $conbtn['play']['icon']  = 'play'; 
@@ -132,6 +146,9 @@ $conbtn['remove']['icon']  = 'circle-close';
 $conbtn['remove']['title'] = 'Remove From Playlist';
 
 ?>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.ui.js"></script>
+<script type="text/javascript">
 
 /** State Variables **/
 var playListUpdate;
@@ -158,6 +175,11 @@ $(document).ready( function() {
             true, false);
     });
 
+    $('#resetsearch').click( function() {
+        $('#searchfield').val('');
+        searchResponse('[]');
+    });
+
     $('#addallsongs').click( function () {
         playListAddSongs('.songinfo');
     });
@@ -174,7 +196,7 @@ $(document).ready( function() {
     assignHover('.search-icons');
 
     /** Entire Play Controls **/
-    $('#play-controls').draggable();
+    //$('#play-controls').draggable();
     
     /** Initial Update **/
     updateAddButtons();
@@ -194,7 +216,7 @@ function playListAddSongs(jQCore) {
 
 function searchResponse(args) {
     var fadeTime = 300;
-    $('#addallsongs').fadeOut();
+    $('.search-all-icons').fadeOut();
     $('#searchres').fadeOut(fadeTime, function () {
         $(this).empty();
 
@@ -217,7 +239,8 @@ function searchResponse(args) {
         });
 
         $(this).fadeIn(fadeTime, function() {
-            $('#addallsongs').fadeIn();
+            $('.search-all-icons').fadeIn();
+            updateAddButtons();
         });
     });
 }
@@ -225,7 +248,7 @@ function searchResponse(args) {
 function updateAddButtons() {
     var jQR = $('.search-reit.ui-selected');
 
-    var singleBtn = '#addsinglesong, #deselsearch';
+    var singleBtn = '.search-sel-icons';
     if (jQR.length == 0) {
         if ($(singleBtn).css('display') != 'none') {
             $(singleBtn).fadeOut();
@@ -315,26 +338,20 @@ function cmd_resume() {
     sendMPD('pause', '0');
 }
 
+function cmd_psclear() {
+    playListUpdate = true;
+    sendMPD('clear');
+}
+
 function cmd_remove(arg) {
     var playArg = currentTargetExtract(arg.currentTarget.id, playListCurr);
 
     playListUpdate = true;
-    sendMPD('deleteid', playArg);
-}
-
-function cmd_addSong(arg) {
-    var ctid = arg.currentTarget.id;
-    if (ctid == '' || ctid == 'undefined') {
-        updateDebug('null');
-        return;
-    }
-
-    var playArg = $('#' + ctid + ' .songinfo').text();
-
-    return;
-
-    playListUpdate = true;
-    sendMPD('addid', playArg);
+    
+    // Do animation
+    $('#' + playlistName(playArg)).fadeOut(300, function() {
+        sendMPD('deleteid', playArg);
+    });
 }
 
 /** Misc Functions **/
@@ -397,7 +414,7 @@ $jsid = '\' + playListId + \'_';
 foreach ($conbtn as $id => $btn) {
     echo "\t\t\t" . '+ \'' 
         . build_div_button($jsid . $id, $btn['icon'], 
-            'play-icons', $btn['title']) 
+                'play-icons', $btn['title']) 
         . '\'' . "\n";
 }
 
@@ -469,6 +486,10 @@ function updateState_state(arg) {
     updateIcon(arg, 'play');
 
     currState = arg;
+
+    if (currState == 'play') {
+        setTimeout('updateState();', 666);
+    }
 }
 
 function updateIcon(state, ident) {
@@ -585,8 +606,11 @@ function sendMPD(cmd, args, customcallback, asyncOpt, forceQuote) {
 }
 </script>
 
-<div id="searchres"></div>
-<div id="songlist"></div>
+<div id="searchres">
+</div>
+
+<div id="songlist">
+</div>
 
 <div id="play-controls" class="ui-widget ui-widget-content ui-corner-all">
 <!--
@@ -620,18 +644,31 @@ $searchbtn = array();
 
 $searchbtn['searchbutton']['title'] = 'Search';
 $searchbtn['searchbutton']['icon']  = 'search';
+$searchbtn['searchbutton']['class'] = '';
 
 $searchbtn['addallsongs']['title'] = 'Add All Songs';
 $searchbtn['addallsongs']['icon']  = 'circle-plus';
+$searchbtn['addallsongs']['class'] = 'search-all-icons';
+
+/*
+$searchbtn['resetsearch']['title'] = 'Remove Search Results';
+$searchbtn['resetsearch']['icon']  = 'trash';
+$searchbtn['resetsearch']['class'] = 'search-all-icons';
+*/
 
 $searchbtn['addsinglesong']['title'] = 'Add Selected Song(s)';
 $searchbtn['addsinglesong']['icon']  = 'plus';
+$searchbtn['addsinglesong']['class'] = 'search-sel-icons';
 
+/**
 $searchbtn['deselsearch']['title'] = 'Deselect Songs';
 $searchbtn['deselsearch']['icon']  = 'close';
+$searchbtn['deselsearch']['class'] = 'search-sel-icons';
+**/
 
 foreach ($searchbtn as $id => $btn) {
-    echo build_div_button($id, $btn['icon'], 'search-icons', $btn['title'])
+    echo build_div_button($id, $btn['icon'], 
+            'search-icons ' . $btn['class'], $btn['title'])
         . "\n";
 }
 
