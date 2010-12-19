@@ -170,11 +170,11 @@ function publishSearches() {
                 sYear = '';
             }
 
-            curAlbum = sYear + sSong.album + sDisc;
+            curAlbum = sSong.artist 
+                + ' - ' + sYear + ' ' + sSong.album + sDisc;
         }
 
         if (preAlbum != curAlbum) {
-            
             $('#searchres').append(
                   '<div class="search-item">'
                 + '<div class="ui-state-default ui-corner-all '
@@ -185,6 +185,7 @@ function publishSearches() {
 
             preAlbum = curAlbum;
         }
+
         addSearchResult(sSong, i);
     }
 
@@ -200,6 +201,11 @@ function publishSearches() {
 }
 
 function searchHelper(a, b, field, nextarr) {
+    if (field.match(/[^a-zA-Z]/)) {
+        alert("Danger Match!");
+        return false;
+    }
+
     if (eval('a.' + field) == undefined) {
         if (eval('b.' + field) == undefined) {
             eval('a.' + field + ' = 0');
@@ -272,17 +278,17 @@ function addSearchResult(song, searchId) {
     } else {
         var trackStr = '';
         if (song.track != undefined) {
-            trackStr = '(' + song.track + ') ';
+            trackStr = song.track;
         }
 
-        songDisp = trackStr + song.artist + ' - ' + song.title;
+        songDisp = trackStr + ' - ' + song.title;
     }
 
     $('#searchres').append(
               '<div class="search-item">'
             + '<div class="ui-state-default ui-corner-all '
             + 'album-reit album-reit-tl">'
-            + '<span class="ui-icon ui-icon-bullet"></span>'
+            + '<span class="ui-icon ui-icon-carat-1-e"></span>'
             + '</div>'
             + '<div class="ui-state-default ui-corner-all search-reit">' 
             + songDisp + '</div>'
