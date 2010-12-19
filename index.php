@@ -47,11 +47,6 @@ $playbtn[$sepstr]['icon']  = 'grip-solid-vertical';
 $playbtn[$sepstr]['nullvoid'] = TRUE;
 $sephelp++;
 
-/**
-$playbtn['refresh']['title'] = 'Quick Refresh';
-$playbtn['refresh']['icon']  = 'arrowrefresh-1-w';
-**/
-
 $conbtn = array();
 $conbtn['play']['icon']  = 'play'; 
 $conbtn['play']['title'] = 'Play This Song';
@@ -85,6 +80,7 @@ $(document).ready( function() {
         if (isset($btn['nullvoid'])) {
             continue;
         }
+
         echo "\t$('#" . $id . "').click( cmd_$id );";
     }
 ?>
@@ -110,11 +106,6 @@ $(document).ready( function() {
 
     $('#addsinglesong').click( function () {
         playListAddSongs('.ui-selected + .songinfo');
-    });
-
-    $('#deselsearch').click( function () {
-        $('.ui-selected').removeClass('ui-selected');
-        updateAddButtons();
     });
 
     assignHover('.search-icons');
@@ -144,7 +135,8 @@ function publishSearches() {
             // If we do all pass, anthropology!
             var sOrder = ["artist", "year", "disc", "track"];
             return searchHelper(a, b, sOrder.shift(), sOrder);
-        });
+        }
+    );
 
     var sSong;
 
@@ -243,6 +235,9 @@ function playListAddSongs(jQCore) {
     updateState();
 }
 
+/**
+ *  Add all results from a search to global search cache.
+ **/
 function searchResponse(args) {
     if (args == '[]') {
         return false;
@@ -254,7 +249,7 @@ function searchResponse(args) {
         searchCache.push(sres[i]);
     }
 
-    return false;
+    return true;
 }
 
 function updateAddButtons() {
@@ -328,7 +323,7 @@ function currentTargetExtract(cti, alt) {
     return playArg;
 }
 
-/** MPD Buttons **/
+/** MPD Control Buttons **/
 function cmd_play(arg) {
     var playArg = currentTargetExtract(arg.currentTarget.id, playListCurr);
 
@@ -743,15 +738,18 @@ $searchbtn['addsinglesong']['icon']  = 'plus';
 $searchbtn['addsinglesong']['class'] = 'search-sel-icons';
 
 foreach ($searchbtn as $id => $btn) {
-    echo build_div_button($id, $btn['icon'], 
-            'search-icons ' . $btn['class'], $btn['title']) . "\n";
+    echo "\t" . build_div_button(
+            $id, $btn['icon'], 
+            'search-icons ' . $btn['class'], $btn['title']) 
+        . "\n";
 }
 
 ?>
     </div>
 </div>
 
-<pre id="debuggah"></pre>
+<pre id="debuggah">
+</pre>
 
 </body>
 

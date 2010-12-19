@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 class mpd_connection {
     private $host;
