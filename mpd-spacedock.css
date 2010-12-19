@@ -1,0 +1,126 @@
+/** Global **/
+body {
+    min-width: 1024px;
+}
+
+/** Play Controls **/
+#play-controls {
+    position: fixed;
+    padding: 4px;
+    width: 98%;
+    height: auto;
+    background-color: #FFFFFF;
+}
+
+.mod-title {
+    text-align: center;
+    margin: 2px;
+    padding: 0px 8px;
+    float: left;
+}
+
+.play-icons {
+    padding: 4px;
+    margin: 2px;
+    float: left;
+}
+
+#voluprogwrap {
+    float: left;
+    margin: 8px;
+    width: 40px;
+}
+
+#playprogwrap {
+    width: 400px;
+    float: left;
+    margin: 8px 14px;
+}
+
+#playprogtext {
+    margin: 4px;
+    float: left;
+}
+
+#songlist {
+    top: 50px;
+    width: 50%;
+    left: 12px;
+    position: absolute;
+}
+
+#playlistcowrap {
+    clear: both;
+}
+
+.playlistco {
+    float: right;
+    padding: 4px;
+    margin: 2px 24px 2px 0px;
+}
+
+.song-item {
+    float: left;
+    width: 85%;
+    padding: 2px;
+    margin: 2px;
+}
+
+#searchwrap {
+    width: 100%;
+}
+
+#searchres {
+    top: 50px;
+    right: 0px;
+    width: 50%;
+    position: absolute;
+}
+
+.search-reit {
+    padding: 2px;
+    margin: 2px 2px;
+    width: 90%;
+    float: left;
+}
+
+.album-reit {
+    padding: 4px;
+    margin: 2px 2px;
+    float: left;
+}
+
+.album-reit-name {
+    width: 95%;
+}
+
+.album-reit-tl {
+    width: 16px;
+}
+
+.search-icons {
+    float: left;
+    padding: 4px;
+    margin: 2px 2px;
+}
+
+.search-item {
+
+}
+
+#searchfield {
+    float: left;
+}
+
+.ui-selected {
+    background: #DB4865 url(http://localhost/mpd/css/custom-theme/images/ui-bg_glass_40_db4865_1x400.png) repeat-x 50% 50%;
+}
+
+.no-display {
+    display: none;
+}
+
+.separator {
+    float: left;
+    margin: 6px 0px;
+}
