@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title> Spaceport Level 703 - MPD </title>
+    <title> Spaceport Level 703 </title>
     <link type="text/css" href="css/custom-theme/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
     <link type="text/css" href="mpd-spacedock.css" rel="stylesheet" />
 </head>
