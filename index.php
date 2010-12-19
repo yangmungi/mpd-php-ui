@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title> Space Port v1.00 </title>
+    <title> Spaceport Level 703 - MPD </title>
     <link type="text/css" href="css/custom-theme/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
     <link type="text/css" href="mpd-spacedock.css" rel="stylesheet" />
 </head>
@@ -119,6 +119,8 @@ $(document).ready( function() {
 
     assignHover('.search-icons');
 
+    $('.search-all-icons').fadeOut();
+
     /** Initial Update **/
     updateAddButtons();
     updateState();
@@ -131,7 +133,7 @@ function clearSearches() {
 
 function publishSearches() {
     if (searchCache == undefined || searchCache == null) {
-        updateDebug("No search results");
+        $('.search-all-icons').fadeOut();
         return false;
     }
 
@@ -440,6 +442,8 @@ function playlistName(id) {
 }
 
 function updatePlaylist(arg) {
+    $('#songlist').sortable("destroy");
+    
     var songInfo = parseMPDResults(arg);
 
     for (var i in songInfo) {
@@ -448,8 +452,7 @@ function updatePlaylist(arg) {
               songInfo[i]['artist'] + ' - '
             + songInfo[i]['title'];
         $('#songlist').append(
-              '<div id="'+ playListId + '" '
-            + '>' 
+              '<div id="'+ playListId + '" class="song-reit">' 
             + '<div class="ui-state-default ui-corner-all song-item">'
             + songInfoString 
             + '</div>'
@@ -478,6 +481,8 @@ foreach ($conbtn as $id => $btn) {
 
 ?>
     }
+
+    $('#songlist').sortable();
 }
 
 /** State Update Functions **/
@@ -494,11 +499,11 @@ function updateState_volume(args) {
     $('#voluprog').slider({
         orientation: 'horizontal',
         range: 'min',
-        min: -1,
+        min: 0,
         max: 100,
         value: args,
         slide: function(event, ui) {
-            sendMPD('setvol', ui.value - 1, false);
+            sendMPD('setvol', ui.value, false);
         }
     });
 

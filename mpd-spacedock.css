@@ -66,6 +66,11 @@ body {
     margin: 2px;
 }
 
+.song-reit {
+    float: left;
+    width: 100%;
+}
+
 #searchwrap {
     width: 100%;
 }
