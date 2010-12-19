@@ -19,22 +19,29 @@ body {
     float: left;
 }
 
+.float-left {
+    float: left;
+}
+
+.float-right {
+    float: right;
+}
+
 .play-icons {
     padding: 4px;
     margin: 2px;
-    float: left;
 }
 
 #voluprogwrap {
-    float: left;
     margin: 8px;
     width: 40px;
+    float: left;
 }
 
 #playprogwrap {
-    width: 400px;
-    float: left;
+    width: 50%;
     margin: 8px 14px;
+    float: left;
 }
 
 #playprogtext {
@@ -44,7 +51,7 @@ body {
 
 #songlist {
     top: 50px;
-    width: 50%;
+    width: 98%;
     left: 12px;
     position: absolute;
 }
@@ -61,7 +68,7 @@ body {
 
 .song-item {
     float: left;
-    width: 85%;
+    width: auto;
     padding: 2px;
     margin: 2px;
 }
@@ -71,15 +78,20 @@ body {
     width: 100%;
 }
 
+.song-reit-cont {
+    float: right;
+}
+
 #searchwrap {
-    width: 100%;
+    float: right;
+    width: auto;
 }
 
 #searchres {
-    top: 50px;
-    right: 0px;
-    width: 50%;
-    position: absolute;
+    font-size: 0.8em;
+    float: left;
+    clear: both;
+    width: 100%;
 }
 
 .search-reit {
@@ -101,6 +113,7 @@ body {
 
 .album-reit-tl {
     width: 16px;
+    clear: both;
 }
 
 .search-icons {

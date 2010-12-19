@@ -5,7 +5,6 @@
     <link type="text/css" href="mpd-spacedock.css" rel="stylesheet" />
 </head>
 <body>
-
 <?php
 
 $playbtn = array();
@@ -55,38 +54,61 @@ $conbtn['remove']['icon']  = 'circle-close';
 $conbtn['remove']['title'] = 'Remove From Playlist';
 
 ?>
-
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="jquery.ui.js"></script>
 <script type="text/javascript">
 
 /** State Variables **/
+// Mark to update the playlist
 var playListUpdate;
+// The currently playing song
 var playListCurr;
 
+// When MPD is stopped, volume is reported as -1, so use this
+// to keep track of what the volume used to be
 var volPrev;
 
+// The play state of MPD
 var currState;
+
+// MPD repeat mode on
 var currRepeat;
+// MPD single mode on
 var currSingle;
 
+// Maintains a list of all search results over the search-all-fields calls
 var searchCache;
 
 /** Initial Assigns and Event Listeners **/
 $(document).ready( function() {
     /** Play Controls **/
 <?php
-    foreach ($playbtn as $id => $btn) {
-        if (isset($btn['nullvoid'])) {
-            continue;
-        }
 
-        echo "\t$('#" . $id . "').click( cmd_$id );";
+foreach ($playbtn as $id => $btn) {
+    if (isset($btn['nullvoid'])) {
+        continue;
     }
+
+    echo "    $('#" . $id . "').click( cmd_$id );\n";
+}
+
 ?>
     assignHover('.play-icons');
 
+    var searchDialog = 'searchDialog';
+
     /** Search Controls **/
+    $('#' + searchDialog).dialog({
+        autoOpen: false,
+        height: 500,
+        width: 800
+    });   
+
+    $('#opensearch').click( function() {
+        // Open modal search window
+        $('#' + searchDialog).dialog('open');
+    });
+    
     $('#searchbutton').click( function() {
         var searching = $('#searchfield').val();
 
@@ -100,6 +122,7 @@ $(document).ready( function() {
         publishSearches();
     });
 
+    /** Move songs from search to playlist **/
     $('#addallsongs').click( function () {
         playListAddSongs('.songinfo');
     });
@@ -129,10 +152,8 @@ function publishSearches() {
     }
 
     // Shmidty?
-
     var sortSC = searchCache.sort(
         function(a, b) {
-            // If we do all pass, anthropology!
             var sOrder = ["artist", "year", "disc", "track"];
             return searchHelper(a, b, sOrder.shift(), sOrder);
         }
@@ -194,6 +215,7 @@ function publishSearches() {
     });
 }
 
+/** Used as a sort callback **/
 function searchHelper(a, b, field, nextarr) {
     if (field.match(/[^a-zA-Z]/)) {
         alert("Danger Match!");
@@ -225,6 +247,11 @@ function searchHelper(a, b, field, nextarr) {
     }
 }
 
+/** 
+  Add a song from the search results to the playlist.
+  Handles cases of multiple selected songs.
+  Uses updateState() to actually update the playlist.
+ **/
 function playListAddSongs(jQCore) {
     $(jQCore).each( function (n, e) {
         sendMPD('addid', $(this).text(), function() { },
@@ -326,7 +353,6 @@ function currentTargetExtract(cti, alt) {
 /** MPD Control Buttons **/
 function cmd_play(arg) {
     var playArg = currentTargetExtract(arg.currentTarget.id, playListCurr);
-
     sendMPD('playid', playArg);
 }
 
@@ -390,9 +416,7 @@ function cmd_remove(arg) {
     playListUpdate = true;
     
     // Do animation
-    $('#' + playlistName(playArg)).fadeOut(300, function() {
-        sendMPD('deleteid', playArg);
-    });
+    sendMPD('deleteid', playArg);
 }
 
 /** Misc Functions **/
@@ -436,6 +460,11 @@ function playlistName(id) {
     return 'pls_' + id;
 }
 
+function divUSDHelper(classStr, infoStr) {
+    return '<div class="ui-state-default ui-corner-all '
+        + classStr + '">' + infoStr + '</div>' + "\n";
+}
+
 function updatePlaylist(arg) {
     $('#songlist').sortable("destroy");
     
@@ -443,24 +472,29 @@ function updatePlaylist(arg) {
 
     for (var i in songInfo) {
         var playListId = playlistName(parseInt(songInfo[i]['id']));
-        var songInfoString = 
-              songInfo[i]['artist'] + ' - '
-            + songInfo[i]['title'];
+        var songInfoStr = '';
+        var songInfoOrder = ['artist', 'album', 'track', 'title'];
+
+        for (var sio in songInfoOrder) {
+            var songInfoK = '(no album)';
+            if (songInfo[i][songInfoOrder[sio]] != undefined) {  
+                songInfoK = songInfo[i][songInfoOrder[sio]];
+            }
+
+            songInfoStr += divUSDHelper('song-item', songInfoK);
+        }
+
         $('#songlist').append(
               '<div id="'+ playListId + '" class="song-reit">' 
-            + '<div class="ui-state-default ui-corner-all song-item">'
-            + songInfoString 
-            + '</div>'
-            + '<div>'
+            + songInfoStr
+            + '<div class="song-reit-cont">'
 <?php
 
 $jsid = '\' + playListId + \'_';
 
 foreach ($conbtn as $id => $btn) {
-    echo "\t\t\t" . '+ \'' 
-        . build_div_button($jsid . $id, $btn['icon'], 
-                'play-icons', $btn['title']) 
-        . '\'' . "\n";
+    echo '+ \'' . build_div_button($jsid . $id, $btn['icon'], 
+            'play-icons float-left', $btn['title']) . '\'' . "\n";
 }
 
 ?>
@@ -470,8 +504,8 @@ foreach ($conbtn as $id => $btn) {
 
 foreach ($conbtn as $id => $btn) {
     $nid = $jsid . $id;
-    echo "\t\t$('#$nid').unbind('click').click( cmd_$id );\n";
-    echo "\t\tassignHover('#$nid');\n";
+    echo "$('#$nid').unbind('click').click( cmd_$id );\n";
+    echo "assignHover('#$nid');\n";
 }
 
 ?>
@@ -522,8 +556,7 @@ function updateState_playlistlength(args) {
       && (playListUpdate == undefined
        || playListUpdate == true)) {
         $('#songlist').empty();
-        sendMPD('playlistinfo', '0:' + playListSize, updatePlaylist, 
-                false);
+        sendMPD('playlistinfo', '0:' + playListSize, updatePlaylist, false);
 
         playListUpdate = false;
     }
@@ -535,7 +568,7 @@ function updateState_state(arg) {
     currState = arg;
 
     if (currState == 'play') {
-        setTimeout('updateState();', 666);
+        setTimeout('updateState();', 500);
     }
 }
 
@@ -688,9 +721,6 @@ function sendMPD(cmd, args, customcallback, asyncOpt, forceQuote) {
 }
 </script>
 
-<div id="searchres">
-</div>
-
 <div id="songlist">
 </div>
 
@@ -705,7 +735,7 @@ foreach ($playbtn as $id => $btn) {
 
     } else {
         echo "\n" . build_div_button($id, $btn['icon'], 
-            'play-icons', $btn['title']) . "\n";
+            'play-icons float-left', $btn['title']) . "\n";
     }
 }
 
@@ -717,10 +747,19 @@ foreach ($playbtn as $id => $btn) {
     <div id="playprogwrap">
         <div id="playprog"></div>
     </div>
+
     <div id="playprogtext">0:00 / 0:00</div>
 
-    <div id="searchwrap">
-        <input id="searchfield" type="text" size="25" />
+<?php
+    echo build_div_button('opensearch', 'search', 
+            'play-icons float-right', 'Open Search Box');
+?>
+    </div>
+</div>
+
+<div id="searchDialog" title="Search">
+<input id="searchfield" type="text" size=25 />
+
 <?php
 
 $searchbtn = array();
@@ -738,21 +777,21 @@ $searchbtn['addsinglesong']['icon']  = 'plus';
 $searchbtn['addsinglesong']['class'] = 'search-sel-icons';
 
 foreach ($searchbtn as $id => $btn) {
-    echo "\t" . build_div_button(
+    echo "    " . build_div_button(
             $id, $btn['icon'], 
             'search-icons ' . $btn['class'], $btn['title']) 
         . "\n";
 }
 
 ?>
-    </div>
+
+<div id="searchres"></div>
 </div>
 
 <pre id="debuggah">
 </pre>
 
 </body>
-
 <?php
 
 function build_div_button($id, $icon, $class_str, $title) {
@@ -765,5 +804,4 @@ function build_div_button($id, $icon, $class_str, $title) {
 }
 
 ?>
-
 </html>
