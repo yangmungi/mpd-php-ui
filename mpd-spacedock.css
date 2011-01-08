@@ -1,10 +1,17 @@
 /** Global **/
 body {
     min-width: 1024px;
+    display: block;
+    margin: 8px;
+}
+
+div {
+    display: block;
 }
 
 /** Play Controls **/
 #play-controls {
+    top: 6px;
     position: fixed;
     padding: 4px;
     width: 98%;
