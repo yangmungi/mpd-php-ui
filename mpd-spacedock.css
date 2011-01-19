@@ -108,6 +108,10 @@ div {
     float: left;
 }
 
+.searchDiagText {
+    padding: 4px;    
+}
+
 .album-reit {
     padding: 4px;
     margin: 2px 2px;
@@ -133,11 +137,11 @@ div {
 
 }
 
-#searchfield {
+#searchDialog input {
     float: left;
 }
 
-.ui-selected {
+.ui-state-default.ui-selected {
     background: #DB4865 url(http://localhost/mpd/css/custom-theme/images/ui-bg_glass_40_db4865_1x400.png) repeat-x 50% 50%;
 }
 

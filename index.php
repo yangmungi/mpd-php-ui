@@ -100,25 +100,46 @@ foreach ($playbtn as $id => $btn) {
     /** Search Controls **/
     $('#' + searchDialog).dialog({
         autoOpen: false,
+        position: 'top',
+        height: 90,
+        width: 800,
+        close: function() {
+            $('#searchresDiag').dialog('close');
+        }
+    });  
+
+    $('#searchresDiag').dialog({
+        autoOpen: false,
         height: 500,
-        width: 800
-    });   
+        width: 800,
+        close: clearSearches
+    });
 
     $('#opensearch').click( function() {
         // Open modal search window
         $('#' + searchDialog).dialog('open');
+        setSearchButtons();
     });
     
     $('#searchbutton').click( function() {
-        var searching = $('#searchfield').val();
+        var searchingArtist = $('#searchfieldartist').val();
+        var searchingSong = $('#searchfieldsong').val();
+
+        if (searchingArtist == '' && searchingSong == '') {
+            return;
+        }
 
         clearSearches();
-        sendMPD('search', 'artist ' + searching, searchResponse, 
-            false, false);
-        sendMPD('search', 'album ' + searching, searchResponse, 
-            false, false);
-        sendMPD('search', 'title ' + searching, searchResponse, 
-            false, false);
+        if (searchingArtist != '') {
+            sendMPD('search', 'artist ' + searchingArtist, 
+                searchResponse, false, false);
+        }
+
+        if (searchingSong != '') {
+            sendMPD('search', 'title ' + searchingSong, 
+                searchResponse, false, false);
+        }
+
         publishSearches();
     });
 
@@ -133,8 +154,6 @@ foreach ($playbtn as $id => $btn) {
 
     assignHover('.search-icons');
 
-    $('.search-all-icons').fadeOut();
-
     /** Initial Update **/
     updateAddButtons();
     updateState();
@@ -143,11 +162,19 @@ foreach ($playbtn as $id => $btn) {
 function clearSearches() {
     searchCache = new Array();
     $('#searchres').empty();
+    setSearchButtons();
+}
+
+function setSearchButtons() {
+    if (searchCache == undefined || searchCache.length == 0) {
+        $('.search-all-icons').fadeOut();
+    }
+
+    updateAddButtons();
 }
 
 function publishSearches() {
     if (searchCache == undefined || searchCache == null) {
-        $('.search-all-icons').fadeOut();
         return false;
     }
 
@@ -212,7 +239,10 @@ function publishSearches() {
     $(this).fadeIn(300, function() {
         $('.search-all-icons').fadeIn();
         updateAddButtons();
+        $('#searchresDiag').dialog('open');
     });
+
+
 }
 
 /** Used as a sort callback **/
@@ -758,7 +788,10 @@ foreach ($playbtn as $id => $btn) {
 </div>
 
 <div id="searchDialog" title="Search">
-<input id="searchfield" type="text" size=25 />
+    <div class="searchDiagText float-left">Artist</div>
+    <input id="searchfieldartist" type="text" size=25 />
+    <div class="searchDiagText float-left">Song</div>
+    <input id="searchfieldsong" type="text" size=25 />
 
 <?php
 
@@ -784,8 +817,10 @@ foreach ($searchbtn as $id => $btn) {
 }
 
 ?>
+</div>
 
-<div id="searchres"></div>
+<div id="searchresDiag" title="Search Results">
+    <div id="searchres"></div>
 </div>
 
 <pre id="debuggah">
